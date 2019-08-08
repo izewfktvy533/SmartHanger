@@ -1,18 +1,18 @@
 #include "XBee.h"
-#include <DHT.h>
+#include "DHT.h"
 
 #define DHT_TYPE DHT22
 #define DHT_PIN1 3
 #define DHT_PIN2 6
-#define COORDINATOR_HIGH_ADDRESS 0x0013A200
-#define COORDINATOR_LOW_ADDRESS  0x415411AB
 
 
 const int BITRATE = 9600;
 DHT sensor1(DHT_PIN1, DHT_TYPE);
 DHT sensor2(DHT_PIN2, DHT_TYPE);
 XBee xbee = XBee();
-XBeeAddress64 addr64 = XBeeAddress64(COORDINATOR_HIGH_ADDRESS,  COORDINATOR_LOW_ADDRESS);
+XBeeAddress64 addr64;
+ZBRxResponse  rxResponse;
+ZBTxRequest   txRequest;
 
 
 
@@ -32,11 +32,86 @@ inline void convertFloatToChar(char* str, float value)
  
     if(inverse == true){
         sprintf(str, "-%d.%02d", whl, frac);
-    }else{
+    }
+    else{
         sprintf(str, "%d.%02d", whl, frac);
     }
 
 }
+
+
+
+/*
+inline bool canGetResponse(uint8_t api_id) {
+  if (xbee.getResponse().isAvailablie()) {
+    if (xbee.getResponse().getApiId() == api_id) return true;
+    else return false;
+  }
+  else return false;
+}
+*/
+
+
+
+inline bool canGetResponse(uint8_t api_id) {
+  if (xbee.getResponse().getApiId() == api_id) return true;
+  else return false;
+}
+
+
+
+inline bool canReadRxResponse(uint32_t timeout, uint8_t api_id) {
+  bool can_read_packet_bool = true;
+  
+  if(timeout == 0) {
+    xbee.readPacket();
+  }
+  else if(timeout > 0) {
+    can_read_packet_bool = xbee.readPacket(timeout);
+  }
+  else return false;
+
+  if (can_read_packet_bool && canGetResponse(api_id)) {
+    xbee.getResponse().getZBRxResponse(rxResponse);
+    return true;
+  }
+  else return false;
+
+}
+
+
+
+inline String getRecievedData() {
+    return (String)((char*)(rxResponse.getFrameData() + 11));
+}
+
+
+
+inline void startHandShake() {
+  // ブロードキャストを受信
+  while(true) {
+    while(!canReadRxResponse(0, ZB_RX_RESPONSE));
+    if(rxResponse.getFrameData()[10] == 2 && getRecievedData().compareTo("start")) break; 
+  }
+
+  // ゲートウェイ側のアドレスを取得
+  addr64 = rxResponse.getRemoteAddress64();
+}
+
+
+
+inline bool isFinishHandShake() {
+  // ブロードキャストを受信
+  while(!canReadRxResponse(0, ZB_RX_RESPONSE));
+  if(rxResponse.getFrameData()[10] == 2 && getRecievedData().compareTo("finish")) true; 
+  else false;
+}
+
+
+
+void reset() {
+  asm volatile ("  jmp 0");  
+} 
 
 
 
@@ -45,21 +120,27 @@ void setup() {
   pinMode(DHT_PIN2, INPUT);
   Serial.begin(BITRATE);
   xbee.setSerial(Serial);
+  startHandShake();
 }
 
 
 
 void loop(){
   int start_time_m = millis();
+
+  //if(isFinishHandShake()) reset();
+  
   float tem_val1 = sensor1.readTemperature();
   float hum_val1 = sensor1.readHumidity();
   float tem_val2 = sensor2.readTemperature();
   float hum_val2 = sensor2.readHumidity();
 
+  /*
   if(isnan(tem_val1)) tem_val1 = sensor1.readTemperature();
   if(isnan(hum_val1)) hum_val1 = sensor1.readHumidity();
   if(isnan(tem_val2)) tem_val2 = sensor2.readTemperature();
   if(isnan(hum_val2)) hum_val2 = sensor2.readHumidity();
+  */
 
   char data_json[256];
   char tem_val1_str[16];
@@ -99,8 +180,8 @@ void loop(){
   */
   int delta = finish_time_m - start_time_m;
 
-  if (delta < 3000) {
-    delay(3000 - delta);
+  if (delta < 5000) {
+    delay(5000 - delta);
   }
 
 }
