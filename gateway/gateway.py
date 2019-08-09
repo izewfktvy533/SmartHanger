@@ -34,7 +34,7 @@ def start_handshake():
 
 
 def finish_handshake():
-    handshake(6, "start\00");
+    handshake(6, "finish\00");
 
 
 
