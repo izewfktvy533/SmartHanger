@@ -53,6 +53,8 @@ def xbee_handler(packet):
         data_dit.update({'timestamp': timestamp_str})
         data_dit.update({'address': address_str})
 
+        print(data_dit)
+
         with open(file_name, 'a') as fp:
             fp.write(str(data_dit))
             fp.write("\n")

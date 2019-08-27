@@ -2,15 +2,15 @@
 #include "DHT.h"
 
 #define DHT_TYPE DHT22
-#define DHT_PIN1 3
-#define DHT_PIN2 6
-#define DHT_PIN3 6
+#define CENTER_DHT 8
+#define LEFT_DHT   3
+#define RIGHT_DHT  4
 
 
 const int BITRATE = 9600;
-DHT sensor1(DHT_PIN1, DHT_TYPE);
-DHT sensor2(DHT_PIN2, DHT_TYPE);
-DHT sensor3(DHT_PIN3, DHT_TYPE);
+DHT center_sensor(CENTER_DHT, DHT_TYPE);
+DHT left_sensor(LEFT_DHT, DHT_TYPE);
+DHT right_sensor(RIGHT_DHT, DHT_TYPE);
 
 XBee xbee = XBee();
 XBeeAddress64 addr64;
@@ -119,9 +119,9 @@ void reset() {
 
 
 void setup() {
-  pinMode(DHT_PIN1, INPUT);
-  pinMode(DHT_PIN2, INPUT);
-  pinMode(DHT_PIN3, INPUT);
+  pinMode(CENTER_DHT, INPUT);
+  pinMode(LEFT_DHT, INPUT);
+  pinMode(RIGHT_DHT, INPUT);
   Serial.begin(BITRATE);
   xbee.setSerial(Serial);
   startHandShake();
@@ -134,38 +134,38 @@ void loop(){
 
   //if(isFinishHandShake()) reset();
   
-  float tem_val1 = sensor1.readTemperature();
-  float hum_val1 = sensor1.readHumidity();
-  float tem_val2 = sensor2.readTemperature();
-  float hum_val2 = sensor2.readHumidity();
-  float tem_val3 = sensor3.readTemperature();
-  float hum_val3 = sensor3.readHumidity();
+  float center_tem = center_sensor.readTemperature();
+  float center_hum = center_sensor.readHumidity();
+  float left_tem = left_sensor.readTemperature();
+  float left_hum = left_sensor.readHumidity();
+  float right_tem = right_sensor.readTemperature();
+  float right_hum = right_sensor.readHumidity();
 
 
   char data_json[256];
-  char tem_val1_str[16];
-  char hum_val1_str[16];
-  char tem_val2_str[16];
-  char hum_val2_str[16];
-  char tem_val3_str[16];
-  char hum_val3_str[16];
+  char center_tem_str[16];
+  char center_hum_str[16];
+  char left_tem_str[16];
+  char left_hum_str[16];
+  char right_tem_str[16];
+  char right_hum_str[16];
 
   memset(data_json, 0, 256);
-  memset(tem_val1_str, 0, 16);
-  memset(hum_val1_str, 0, 16);
-  memset(tem_val2_str, 0, 16);
-  memset(hum_val2_str, 0, 16);
-  memset(tem_val3_str, 0, 16);
-  memset(hum_val3_str, 0, 16);
+  memset(center_tem_str, 0, 16);
+  memset(center_hum_str, 0, 16);
+  memset(left_tem_str, 0, 16);
+  memset(left_hum_str, 0, 16);
+  memset(right_tem_str, 0, 16);
+  memset(right_hum_str, 0, 16);
 
-  convertFloatToChar(tem_val1_str, tem_val1);
-  convertFloatToChar(hum_val1_str, hum_val1);
-  convertFloatToChar(tem_val2_str, tem_val2);
-  convertFloatToChar(hum_val2_str, hum_val2);
-  convertFloatToChar(tem_val3_str, tem_val3);
-  convertFloatToChar(hum_val3_str, hum_val3);
+  convertFloatToChar(center_tem_str, center_tem);
+  convertFloatToChar(center_hum_str, center_hum);
+  convertFloatToChar(left_tem_str,   left_tem);
+  convertFloatToChar(left_hum_str,   left_hum);
+  convertFloatToChar(right_tem_str,  right_tem);
+  convertFloatToChar(right_hum_str,  right_hum);
 
-  sprintf(data_json, "{'tem_val1':%s, 'hum_val1':%s, 'tem_val2':%s, 'hum_val2':%s, 'tem_val3':%s, 'hum_val3':%s}", tem_val1_str, hum_val1_str, tem_val2_str, hum_val2_str, tem_val3_str, hum_val3_str);
+  sprintf(data_json, "{'center_tem':%s, 'center_hum':%s, 'left_tem':%s, 'left_hum':%s, 'right_tem':%s, 'right_hum':%s}", center_tem_str, center_hum_str, left_tem_str, left_hum_str, right_tem_str, right_hum_str);
   
 
   ZBTxRequest zbTx = ZBTxRequest(addr64, data_json, strlen(data_json));
