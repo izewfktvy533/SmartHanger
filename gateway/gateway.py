@@ -34,7 +34,7 @@ def start_handshake():
 
 
 def finish_handshake():
-    handshake(6, "start\00");
+    handshake(6, "finish\00");
 
 
 
@@ -52,6 +52,8 @@ def xbee_handler(packet):
         data_dit = ast.literal_eval((packet['rf_data']).decode('utf-8'))
         data_dit.update({'timestamp': timestamp_str})
         data_dit.update({'address': address_str})
+
+        print(data_dit)
 
         with open(file_name, 'a') as fp:
             fp.write(str(data_dit))
