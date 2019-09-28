@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from xbee import ZigBee
 from datetime import datetime
 import ast
@@ -8,9 +9,12 @@ import struct
 import time
 
 
+time.sleep(30)
+
+
 PORT = '/dev/ttyUSB0'
 BAUD_RATE = 9600
-file_name = './data/' + datetime.now().strftime('%Y-%m-%dT%H:%M:%S') + '.json'
+file_name = '/home/pi/SmartHanger/gateway/data/' + datetime.now().strftime('%Y-%m-%dT%H:%M:%S') + '.json'
 
 
 
